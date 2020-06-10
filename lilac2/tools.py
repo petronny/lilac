@@ -9,6 +9,7 @@ from typing import Generator
 ansi_escape_re = re.compile(r'\x1B(\[[0-?]*[ -/]*[@-~]|\(B)')
 
 def kill_child_processes() -> None:
+  return
   subprocess.run(['kill_children'])
 
 @contextlib.contextmanager
