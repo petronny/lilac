@@ -209,6 +209,7 @@ def run_build_cmd(cmd: Cmd) -> None:
     kill_child_processes()
 
 def may_need_cleanup() -> None:
+  return
   st = os.statvfs('/var/lib/archbuild')
   if st.f_bavail * st.f_bsize < 60 * 1024 ** 3:
     subprocess.check_call(['sudo', 'build-cleaner'])
