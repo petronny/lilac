@@ -376,7 +376,7 @@ def _prepend_self_path() -> None:
   path = os.environ['PATH']
   os.environ['PATH'] = str(mydir / path)
 
-def single_main(build_prefix: str = 'makepkg', build_args=None, makechrootpkg_args=None, makepkg_args=None) -> None:
+def single_main(build_prefix: str = None, build_args=None, makechrootpkg_args=None, makepkg_args=None) -> None:
   from nicelogger import enable_pretty_logging
   from . import lilacpy
   from .building import lilac_build
@@ -384,6 +384,8 @@ def single_main(build_prefix: str = 'makepkg', build_args=None, makechrootpkg_ar
   _prepend_self_path()
   enable_pretty_logging('DEBUG')
   with lilacpy.load_lilac(Path('.')) as mod:
+    if build_prefix is None:
+      build_prefix = mod.build_prefix
     if build_args:
       mod.build_args = build_args
     if makechrootpkg_args:
