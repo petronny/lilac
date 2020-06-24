@@ -16,7 +16,7 @@ from .typing import LilacMod, Cmd
 from .cmd import run_cmd
 from .api import (
   vcs_update, get_pkgver_and_pkgrel, update_pkgrel,
-  _next_pkgrel,
+  _next_pkgrel, action_post_build
 )
 from .packages import Dependency
 from .nvchecker import NvResults
@@ -83,20 +83,24 @@ def lilac_build(
         raise SkipBuild(msg)
 
     run_cmd(["sh", "-c", "rm -f -- *.pkg.tar.xz *.pkg.tar.xz.sig *.pkg.tar.zst *.pkg.tar.zst.sig"])
-    pre_build = getattr(mod, 'pre_build', None)
+    if build_prefix.startswith('action-'):
+        logger.debug('skipping pre_build in action build')
+    else:
+        pre_build = getattr(mod, 'pre_build', None)
 
-    with may_update_pkgrel():
-      if pre_build is not None:
-        logger.debug('accept_noupdate=%r, oldver=%r, newver=%r', accept_noupdate, oldver, newver)
-        pre_build()
-      run_cmd(['recv_gpg_keys'])
-      vcs_update()
+        with may_update_pkgrel():
+          if pre_build is not None:
+            logger.debug('accept_noupdate=%r, oldver=%r, newver=%r', accept_noupdate, oldver, newver)
+            pre_build()
+          run_cmd(['recv_gpg_keys'])
+          vcs_update()
 
-    pkgbuild.check_srcinfo()
+        pkgbuild.check_srcinfo()
 
-    need_build_first = set()
     build_prefix = build_prefix or getattr(
       mod, 'build_prefix', 'extra-x86_64')
+
+    need_build_first = set()
     depend_packages = []
 
     for x in depends:
@@ -133,7 +137,11 @@ def lilac_build(
     pkgs = [x for x in os.listdir() if x.endswith(('.pkg.tar.xz', '.pkg.tar.zst'))]
     if not pkgs:
       raise Exception('no package built')
+
     post_build = getattr(mod, 'post_build', None)
+    if build_prefix.startswith('action-'):
+        logger.debug('override post_build with action_post_build in action build')
+        post_build = action_post_build
     if post_build is not None:
       post_build()
     success = True

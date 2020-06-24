@@ -504,6 +504,12 @@ def aur_post_build() -> None:
     git_commit()
   del _g.aur_pre_files, _g.aur_building_files
 
+def action_post_build() -> None:
+  check_srcinfo()
+  output = run_cmd(["git", "status", "-s", "."]).strip()
+  if output:
+    git_commit()
+
 def download_official_pkgbuild(name: str) -> List[str]:
   url = 'https://www.archlinux.org/packages/search/json/?name=' + name
   logger.info('download PKGBUILD for %s.', name)
